@@ -1,42 +1,82 @@
 import 'package:flutter/material.dart';
+import 'services/air_quality_service.dart';
+import 'screens/home_screen.dart';
+import 'screens/map_screen.dart';
+import 'screens/history_screen.dart';
+import 'screens/alerts_screen.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(const AirQualityApp());
+}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  // This widget is the root of your application.
+class AirQualityApp extends StatelessWidget {
+  const AirQualityApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Application name
-      title: 'Flutter Hello World',
-      // Application theme data, you can set the colors for the application as
-      // you want
+      title: 'Monitor de Calidad del Aire',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // useMaterial3: false,
-        primarySwatch: Colors.blue,
+        colorSchemeSeed: Colors.teal,
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF7F8FA),
       ),
-      // A widget which will be started on application startup
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const RootScreen(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  final String title;
-  const MyHomePage({super.key, required this.title});  
+class RootScreen extends StatefulWidget {
+  const RootScreen({super.key});
+
+  @override
+  State<RootScreen> createState() => _RootScreenState();
+}
+
+class _RootScreenState extends State<RootScreen> {
+  // Servicio único compartido por todas las pantallas.
+  final AirQualityService _service = AirQualityService();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _service.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeScreen(service: _service),
+      MapScreen(service: _service),
+      HistoryScreen(service: _service),
+      AlertsScreen(service: _service),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        // The title text which will be shown on the action bar
-        title: Text(title),
-      ),
-      body: Center(
-        child: Text(
-          'Hello, World!',
-        ),
+      body: IndexedStack(index: _index, children: screens),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: 'Inicio'),
+          NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map),
+              label: 'Mapa'),
+          NavigationDestination(
+              icon: Icon(Icons.show_chart_outlined),
+              selectedIcon: Icon(Icons.show_chart),
+              label: 'Histórico'),
+          NavigationDestination(
+              icon: Icon(Icons.notifications_outlined),
+              selectedIcon: Icon(Icons.notifications),
+              label: 'Alertas'),
+        ],
       ),
     );
   }
